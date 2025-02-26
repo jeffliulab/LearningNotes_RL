@@ -1,0 +1,264 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\title{Homework1: Nonstationary Bandit Problem}
+\author{Pang Liu}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+In this homework, it is aimed to design and conduct an experiment that demonstrates the limitations of the sample-average method in nonstationary problems. 
+
+Previously, in the 10-arm bandit experiment, the true action values \( q_*(a) \) were sampled once from a \( \mathcal{N}(0, 1) \) distribution and kept fixed. I replicate the experiment to explore the performance of the \(\epsilon\)-greedy strategy under three different \(\epsilon\) values for 1000 steps. After replicating the experiment (running \texttt{1\_experiment\_2\_2.py}), I obtained a result consistent with the textbook, as shown in Figure~\ref{fig:1.1}.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.8\linewidth]{figure1.png} % or width=0.6\textwidth, etc.
+\caption{Replication of the 10-arm bandit experiment in the textbook}
+\label{fig:1.1}
+\end{figure}
+
+
+This experiment indicated that \(\epsilon = 0.1\) is optimal among the three settings. Building on this, I am interested in investigating a new question: \textbf{if the environment is \textbf{nonstationary}, how do different \(Q\)-estimation methods perform? }
+
+With the proven optimal \(\epsilon = 0.1\), I will extend the number of steps and create a nonstationary testbed to examine:
+\begin{itemize}
+    \item The sample-average method (incremental update)
+    \item The constant step-size method
+\end{itemize}
+The expectation, based on theoretical knowledge, is that the constant step-size method will adapt more quickly to changes in \(q_*(a)\) and thus perform better in a nonstationary environment.
+
+\section{Experiment Setup (Testbed)}
+
+Before comparing, let's call back the methods that we have learned. First of all is the \textbf{Sample-Average Method},where we store all historical rewards to compute the mean:
+
+\[
+Q(a) = \frac{1}{N(a)} \sum_{i=1}^{N(a)} R_i,
+\]
+
+We also use the \textbf{incremental form}, which is equivalent in result to the sample-average but more efficient computationally:
+
+\[
+Q(a) \leftarrow Q(a) + \frac{1}{N(a)} \bigl(R - Q(a)\bigr),
+\]
+
+
+
+Another one is \textbf{Constant Step-Size Method}, where \(\alpha = 0.1\). This method places more weight on recent data and is expected to adapt more quickly in a nonstationary setting:
+
+\[
+Q(a) \leftarrow Q(a) + \alpha \bigl(R - Q(a)\bigr),
+\]
+
+We use incremental form of Sample-Average Method and Constant Step-Size Method to continue testing.
+
+
+\subsection{Bandit Environment Setup}
+
+\begin{itemize}
+
+\item \textbf{Initial values} of \(q_*(a)\): All arms start with the same initial \(q_*(a)\), 
+which can be set to zero or another constant.
+
+    
+    \item {\textbf{Random Walk}}: At each step, all \(q^*(a)\) undergo a random walk:
+    \[
+    q^*(a) \leftarrow q^*(a) + \mathcal{N}(0,\,0.01).
+    \]
+    \item {\textbf{Reward}}: When the agent selects an action \(a\), the reward \(R\) is drawn from
+    \[
+    R \sim \mathcal{N}\bigl(q^*(a),\,1\bigr).
+    \]
+\end{itemize}
+
+\subsection{Agent Setup}
+
+\begin{itemize}
+    \item \(\epsilon\)-greedy with \(\epsilon = 0.1\).
+    \item Compare:
+    \begin{enumerate}
+        \item Sample-Average (incremental form)
+        \item Constant Step-Size (\(\alpha=0.1\))
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Experiment Procedure}
+
+\begin{itemize}
+    \item Each experiment runs for 10{,}000 steps.
+    \item The experiment runs 2{,}000 independent trials and then average the results.
+    \item The experiment records:
+    \begin{enumerate}
+        \item The average reward at each step (to plot the reward curve).
+        \item The proportion of choosing the optimal action at each step (to plot the optimal action percentage curve).
+    \end{enumerate}
+\end{itemize}
+
+Based on theoretical reasoning, constant step-size is expected to adapt faster to changes in \(q^*(a)\) and demonstrate better performance in both the reward curve and the optimal action selection curve.
+
+\section{Experimental Results}
+
+According to the above experimental setup, the result implemented by the codes is shown in Figure~\ref{fig:3.1}.
+
+
+
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{figure2.png}
+\caption{Raw results of the nonstationary bandit experiment}
+\label{fig:3.1}
+\end{figure}
+
+
+
+
+
+
+Because the raw lines are difficult to distinguish, I employed a smoothed (moving average) approach to highlight overall trends, shown in Figure~\ref{fig:3.2}.
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{figure3.png}
+\caption{Smoothed results: (Left) Average Reward vs. Steps, (Right) Optimal Action Selection vs. Steps}
+\label{fig:3.2}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+From these results, we can observe:
+
+\begin{itemize}
+    \item \textbf{Smoothed Average Reward vs. Steps (Left Subplot)}:\\
+    The orange dashed line (Constant Step-Size \(\alpha=0.1\)) achieves higher reward and continues to improve over time.
+    The blue solid line (Sample-Average) grows more slowly and converges to a lower final value.
+    \newline
+    \emph{Conclusion:} Constant step-size (\(\alpha=0.1\)) adapts more quickly in the nonstationary environment, leading to higher average reward.
+
+    \item \textbf{Smoothed Optimal Action Selection vs. Steps (Right Subplot)}:\\
+    The orange dashed line (Constant Step-Size) has a higher rate of optimal action selection, stabilizing around 70\%,
+    whereas the blue solid line (Sample-Average) stabilizes around 40\%.
+    \newline
+    \emph{Conclusion:} Constant step-size (\(\alpha=0.1\)) effectively tracks changes in \(q^*(a)\), enabling the agent to select the optimal action more frequently.
+\end{itemize}
+
+Hence, these results confirm that the constant step-size method outperforms the sample-average method in nonstationary settings.
+
+One important reason why the constant step-size method is more suitable for nonstationary environments can be seen by examining the sample-average (incremental) approach. Because the sample-average method continually averages all past rewards, if \(q^*(a)\) is changing, older data may mislead current action-value estimates. In other words, when the underlying reward function shifts, the accumulated influence of outdated samples slows adaptation and can lead to suboptimal decisions.
+
+In contrast, a constant step-size approach (with \(\alpha=0.1\)) places greater weight on recent rewards, effectively ``forgetting'' older information. This design choice allows the agent to respond more rapidly whenever \(q^*(a)\) changes. Hence, the constant step-size method is inherently better suited to nonstationary environments in which action values fluctuate over time.
+
+
+
+
+
+\section{Further Thinking}
+
+Although the experiment has shown that \(\alpha=0.1\) works effectively in this setup, there are additional investigations one can pursue.
+
+\subsection{Adaptive Step-Size}
+
+One idea is to let the step-size decrease over time, for instance:
+\[
+Q_{t+1} = Q_t + \frac{1}{t}(R_t - Q_t),
+\]
+where older data gradually lose influence. However, in nonstationary environments, if \(\frac{1}{t}\) becomes too small, it can also slow down adaptation to new changes. Empirically, it can be found (Figure~\ref{fig:4.1}) that such a strategy might perform even worse than the pure sample-average method, likely because the step-size shrinks excessively as \(t\) grows.
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{figure4.png}
+\caption{Results of an adaptive step-size approach}
+\label{fig:4.1}
+\end{figure}
+
+
+
+
+
+
+
+
+\subsection{Sliding Window Average}
+
+Alternatively, we can apply a fixed-size sliding window of the most recent \(N\) rewards:
+\[
+Q_t = \frac{1}{N} \sum_{i=t-N+1}^{t} R_i,
+\]
+or in incremental form,
+\[
+Q_t = Q_{t-1} + \frac{1}{N} \Bigl( R_t - R_{t-N} \Bigr).
+\]
+Old data are discarded after they fall out of the window. In experiments (Figure~\ref{fig:4.2}), the sliding window average improves upon the pure sample-average but still tends to underperform compared to a properly chosen constant step-size.
+
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{figure5.png}
+\caption{Results of the sliding window average}
+\label{fig:4.2}
+\end{figure}
+
+
+
+
+
+
+
+
+\subsection{Choosing the Best \(\alpha\)}
+
+
+Exploring Different \(\alpha\) values through varying \(\alpha\) (e.g., 0.05, 0.2, 0.5) to see how different step-sizes affect performance. Extremely large \(\alpha\) may lead to instability (too sensitive to noise), whereas extremely small \(\alpha\) may adapt too slowly.
+
+Figure~\ref{fig:4.3} shows the performance of different \(\alpha\) values: \([0.01, 0.05, 0.1, 0.2, 0.5]\). Indeed, \(\alpha = 0.1\) strikes a good balance between adaptation and noise smoothing in our testbed, confirming it to be the best among the chosen set.
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\linewidth]{figure6.png}
+\caption{Comparison of different constant step-size values \(\alpha\)}
+\label{fig:4.3}
+\end{figure}
+
+
+
+
+
+
+
+
+\section{Conclusion}
+
+In this homework, we designed a nonstationary bandit experiment to compare the sample-average method and the constant step-size method (\(\alpha = 0.1\)). The results support the theoretical expectation that fixed step-size methods perform better in nonstationary environments, because they place more emphasis on recent rewards and thereby adapt more quickly to shifting action values. 
+
+Additionally, we explored variants such as an adaptive step-size approach and a sliding window average. While these methods can partially mitigate the shortcomings of pure sample averaging, the fixed step-size method with a well-chosen \(\alpha\) remains the most straightforward and effective strategy.
+
+In summary:
+\begin{itemize}
+    \item Sample-average methods are suitable for stationary environments but struggle when the true action values change over time.
+    \item Constant step-size methods effectively ``forget'' outdated data and adapt to new conditions, leading to higher rewards and better optimal-action selection rates.
+    \item The choice of \(\alpha\) is crucial: too large can induce excessive variance, too small can slow learning. Empirically, \(\alpha=0.1\) works well for this setup.
+\end{itemize}
+
+
+\bibliographystyle{plain}
+
+\end{document}
