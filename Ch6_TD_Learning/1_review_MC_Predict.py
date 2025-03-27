@@ -57,8 +57,8 @@ class MC:
         self.V = {"town": 0.0, "forest": 0.0, "castle": 0.0}
         self.list_V = []
         self.gamma = 0.95
-        self.alpha = 0.1
-        self.FIXED_TIMESTEP = 10 # 把每个episode的固定的timestep数写在这里
+        self.alpha = 0.01
+        self.FIXED_TIMESTEP = 100 # 把每个episode的固定的timestep数写在这里
         self.EPISODES = 100000
 
     def policy(self, current_state):
@@ -268,3 +268,10 @@ if __name__ == "__main__":
     mc_agent = MC()
     mc_agent.main()
 
+# 通过这个例子复习了一下MC prediction：
+# （1） Prodiction Problem 策略评估
+# 在给定一个具体的策略下，求出该策略下每个状态的价值函数 V_pi(S)
+# 在勇者游戏中，这个V就是最终的V。
+# （2） Control Problem 控制问题（本代码中暂未实现）
+# 寻找一个最优策略pi*, 使得每个状态下都能获得最大的预期累计奖励
+# 即求出最优的状态价值函数V*(s), 或最优动作价值函数Q*(s,a)
